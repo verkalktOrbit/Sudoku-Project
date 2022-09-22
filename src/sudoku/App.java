@@ -9,11 +9,14 @@ class sudokuOverride implements Sudoku{
 
     @Override
     public int[][] createSudoku() {
-
         //Durch alle Positionen im Sudoku gehen
         for(int x = 0; x < 9; x++){
             for(int y = 0; y < 9; y++){
 
+                // Wenn es nur eine Möglichkeit gibt
+                if(globals.möglichen.length == 1){
+
+                }
             }
         }
 
