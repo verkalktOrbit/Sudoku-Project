@@ -2,10 +2,13 @@ package sudoku;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 class sudokuOverride implements Sudoku{
 
     Globals globals = new Globals();
+
+    Random random = new Random();
 
     @Override
     public int[][] createSudoku() {
@@ -13,10 +16,18 @@ class sudokuOverride implements Sudoku{
         for(int x = 0; x < 9; x++){
             for(int y = 0; y < 9; y++){
 
-                // Wenn es nur eine Möglichkeit gibt
-                if(globals.möglichen.length == 1){
+                //Wenn es keine möglichkeiten mehr gibt --> Backtracking
 
-                }
+                //Zufallszahl aus den möglichenListe wählen         | list.size() gibt größe von 1 beginind an, random.nextint() macht random Zahl BIS  bount --> 0-1ß = random.nextint(10)
+                globals.randNum = random.nextInt(globals.möglichenListe.size());
+                //Zahl einsetzen
+                globals.sudoku[x][y] = globals.möglichenListe.get(globals.randNum);
+
+                //An gegebner Stelle (Key) die bereits eingesetzten Zahlen eintragen
+                globals.benutzteZahlen = globals.map.get((y+1)*(x+1));
+                globals.benutzteZahlen.add(globals.möglichenListe.get(globals.randNum));
+                globals.map.put((y+1)*(x+1), globals.benutzteZahlen);
+
             }
         }
 

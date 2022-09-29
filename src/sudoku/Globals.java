@@ -1,6 +1,8 @@
 package sudoku;
 
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Globals {
@@ -15,8 +17,10 @@ public class Globals {
             {3, 4, 5, 0, 0, 0, 0, 0, 0},
             {2, 0, 6, 0, 0, 5, 4, 1, 7}
     };
-
+    public int randNum;
     public int[] möglichen = new int[9];
     public List<Integer> möglichenListe = new ArrayList<>();
+    public List<Integer> benutzteZahlen = new ArrayList<>();
+    public HashMap<Integer, List<Integer>> map = new HashMap<>();
 
 }
