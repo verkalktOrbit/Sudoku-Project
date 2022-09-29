@@ -1,6 +1,5 @@
 package sudoku;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -13,10 +12,17 @@ class sudokuOverride implements Sudoku{
     @Override
     public int[][] createSudoku() {
         //Durch alle Positionen im Sudoku gehen
-        for(int x = 0; x < 9; x++){
-            for(int y = 0; y < 9; y++){
+        for(int y =  0; y < 9; y++){
+            for(int x = 0; x < 9; x++){
 
-                //Wenn es keine möglichkeiten mehr gibt --> Backtracking
+                möglicheZahlen(x, y);
+
+                //Wenn es keine möglichkeiten mehr gibt --> TraceBack
+                if(globals.möglichenListe.size() == 0){
+                    int[] backKoordinate = traceBack(x, y);
+                    x = backKoordinate[0];
+                    y = backKoordinate[1];
+                }
 
                 //Zufallszahl aus den möglichenListe wählen         | list.size() gibt größe von 1 beginind an, random.nextint() macht random Zahl BIS  bount --> 0-1ß = random.nextint(10)
                 globals.randNum = random.nextInt(globals.möglichenListe.size());
@@ -32,6 +38,35 @@ class sudokuOverride implements Sudoku{
         }
 
         return globals.sudoku;
+    }
+
+    @Override
+    //So weit zurück gehen, bis es mehr Möglichen gibt
+    public int[] traceBack(int x, int y) {
+
+        int[] backKoordinate;
+
+        //Rückwärts gehen
+        Outerloop:
+        for(int i = y; y >= 0; y--){
+            for(int j = x; x >= 0; x--){
+                globals.möglichenListe = möglicheZahlen(j, i);
+                if(globals.möglichenListe.size() > 1){
+                    //bereits benutzte Zahlen aus den möglichen entfernen
+                    for(Integer benutzte: globals.map.get((y+1)*(x+1))){
+                        //Wenn benutze nicht in möglichenListe ist passiert nicht
+                        globals.möglichenListe.removeIf(s -> s.equals(benutzte));
+                    }
+                    if(globals.möglichenListe.size() > 0){
+                        backKoordinate = new int[]{j, i};
+                        break Outerloop;
+                    }
+                }
+            }
+
+        }
+
+        return null ;
     }
 
     @Override

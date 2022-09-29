@@ -21,6 +21,8 @@ public class Globals {
     public int[] möglichen = new int[9];
     public List<Integer> möglichenListe = new ArrayList<>();
     public List<Integer> benutzteZahlen = new ArrayList<>();
+
+    //Key entspricht einer Koordinate im Sudoko -> (y+1)*(x+1), damit hat jede Koordinate eine einzigartige "ID"  |  der Value beinhalten alle bereits verwendeten Zahlen an der gegeben Koordinate
     public HashMap<Integer, List<Integer>> map = new HashMap<>();
 
 }
