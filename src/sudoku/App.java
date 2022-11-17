@@ -1,114 +1,145 @@
 package sudoku;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 class sudokuOverride implements Sudoku{
 
     Globals globals = new Globals();
-
     Random random = new Random();
+    @Override
+    public int[][] unsolveSudoku(int difficulty) {
+        int randX = 0;
+        int randY = 0;
 
+        for(int i = 0; i < difficulty; i++){
+            randX = random.nextInt(9);
+            randY = random.nextInt(9);
+            moeglicheZahlen(randY, randX, globals.sudoku);
+            while(globals.moeglichenListe.size() == 1){
+                randX = random.nextInt(9);
+                randY = random.nextInt(9);
+                moeglicheZahlen(randY, randX, globals.sudoku);
+            }
+            globals.sudoku[randY][randX] = 0;
+        }
+        return globals.sudoku;
+    }
     @Override
     public int[][] createSudoku() {
         //Durch alle Positionen im Sudoku gehen
         for(int y =  0; y < 9; y++){
             for(int x = 0; x < 9; x++){
 
-                möglicheZahlen(x, y);
+                globals.map.computeIfAbsent(getKey(y, x), k -> new ArrayList<Integer>());
+
+                moeglicheZahlen(y, x, globals.sudoku);
 
                 //Wenn es keine möglichkeiten mehr gibt --> TraceBack
-                if(globals.möglichenListe.size() == 0){
-                    int[] backKoordinate = traceBack(x, y);
-                    x = backKoordinate[0];
-                    y = backKoordinate[1];
+                if(globals.moeglichenListe.size() == 0){
+                    int[] backKoordinate = backtracking(y, x);
+                    y = backKoordinate[0];
+                    x = backKoordinate[1];
                 }
-
-                //Zufallszahl aus den möglichenListe wählen         | list.size() gibt größe von 1 beginind an, random.nextint() macht random Zahl BIS  bount --> 0-1ß = random.nextint(10)
-                globals.randNum = random.nextInt(globals.möglichenListe.size());
-                //Zahl einsetzen
-                globals.sudoku[x][y] = globals.möglichenListe.get(globals.randNum);
-
-                //An gegebner Stelle (Key) die bereits eingesetzten Zahlen eintragen
-                globals.benutzteZahlen = globals.map.get((y+1)*(x+1));
-                globals.benutzteZahlen.add(globals.möglichenListe.get(globals.randNum));
-                globals.map.put((y+1)*(x+1), globals.benutzteZahlen);
+                //Zufallszahl aus den moeglichenListe wählen         | list.size() gibt größe von 1 beginind an, random.nextint() macht random Zahl BIS  bount --> 0-9 = random.nextint(10)
+                globals.sudoku[y][x] = globals.moeglichenListe.get(random.nextInt(globals.moeglichenListe.size()));
+                //An gegebner Stelle (Key) die eingesetzte Zahlen hinzufügen
+                globals.map.get(getKey(y, x)).add(globals.sudoku[y][x]);
 
             }
         }
-
         return globals.sudoku;
     }
 
     @Override
     //So weit zurück gehen, bis es mehr Möglichen gibt
-    public int[] traceBack(int x, int y) {
+    public int[] backtracking(int y, int x) {
 
-        int[] backKoordinate;
+        int[] backKoordinate = new int[2];
 
         //Rückwärts gehen
         Outerloop:
-        for(int i = y; y >= 0; y--){
-            for(int j = x; x >= 0; x--){
-                globals.möglichenListe = möglicheZahlen(j, i);
-                if(globals.möglichenListe.size() > 1){
-                    //bereits benutzte Zahlen aus den möglichen entfernen
-                    for(Integer benutzte: globals.map.get((y+1)*(x+1))){
-                        //Wenn benutze nicht in möglichenListe ist passiert nicht
-                        globals.möglichenListe.removeIf(s -> s.equals(benutzte));
-                    }
-                    if(globals.möglichenListe.size() > 0){
-                        backKoordinate = new int[]{j, i};
-                        break Outerloop;
-                    }
+        for(int i = y; i >= 0; i--){
+            for(int j = x; j >= 0; j--){
+                if(x == j & y == i){
+                    continue;
+                }
+                globals.sudoku[i][j] = 0;
+                //Möglichen an bereits belegten Stellen ermitteln
+                moeglicheZahlen(i, j, globals.sudoku);
+                for(Integer benutzte: globals.map.get(getKey(i, j)) ){
+                    globals.moeglichenListe.remove(benutzte);
+                }
+                //Wenn es mehr als 2 Möglichkeiten gibt ist die Koordinate gut
+                if(globals.moeglichenListe.size() > 0) {
+                    backKoordinate[0] = i;
+                    backKoordinate[1] = j;
+                    break Outerloop;
                 }
             }
-
+            x = 8;
         }
-
-        return null ;
+        return backKoordinate ;
     }
 
     @Override
-    public List<Integer> möglicheZahlen(int x, int y) {
+    public void moeglicheZahlen(int y, int x, int[][] sudoku) {
 
-        //Vertikale checken
-        for(int i = 0; i < 9; i++){
-            if(globals.sudoku[i][y] != 0) globals.möglichen[globals.sudoku[i][y] -1] = 1;
-        }
-        //horizontale checken
-        for(int i = 0; i < 9; i++){
-            if(globals.sudoku[x][i] != 0) globals.möglichen[globals.sudoku[x][i] - 1] = 1;
-        }
-        //3x3 Feld checken
+        Arrays.fill(globals.benutze, 0);
+        globals.moeglichenListe.clear();
+
+        //3x3 Feld Regel
         // Koordinaten zu Koordinate oben links in der Ecke von 3x3 Feld ändern
-        x = x-(x%3);
-        y = y-(y%3);
-
-        for(int i = 0; i < x; i++){
-            for(int j = 0; j < y; j++){
-                if(globals.sudoku[i][j] != 0){
-                    globals.möglichen[globals.sudoku[i][j] -1] = 1;
-                }
+        for(int i = (Math.floorDiv(y, 3)*3); i < (Math.floorDiv(y, 3)*3)+3; i++){
+            for(int j = (Math.floorDiv(x, 3)*3); j < (Math.floorDiv(x, 3)*3)+3; j++){
+                if(sudoku[i][j] != 0) globals.benutze[sudoku[i][j] - 1] = 1;
             }
         }
-
-        //möglichen | Position von Array korrespondiert mit Zahl im Sudoku -1   -> Position mit 1 belegt exestiert | mit 0 nicht
-        //möglichenListe besteht aus Zahlen die nicht belegt sind
+        //Vertikal Regel
         for(int i = 0; i < 9; i++){
-            if(globals.möglichen[i] == 0){
-                globals.möglichenListe.add(i+1);
+            if(sudoku[i][x] != 0) globals.benutze[sudoku[i][x]-1] = 1;
+        }
+        //Horizontal Regel
+        for(int i = 0; i < 9; i++){
+            if(sudoku[y][i] != 0) globals.benutze[sudoku[y][i] - 1] = 1;
+        }
+        //benutze | Position von Array korrespondiert mit Zahl im Sudoku -1   -> Position mit 1 belegt exestiert | mit 0 nicht
+        //moeglichenListe besteht aus Zahlen die nicht belegt sind
+        for(int i = 0; i < 9; i++){
+            if(globals.benutze[i] == 0){
+                globals.moeglichenListe.add(i+1);
             }
         }
+    }
 
-        return globals.möglichenListe;
+    @Override
+    public String getKey(int y, int x) {
+        return String.format("%d", y)+String.format("%d", x);
     }
 }
 
 public class App {
     public static void main(String[] args){
         sudokuOverride sudokuOverride = new sudokuOverride();
-        System.out.println(sudokuOverride.möglicheZahlen(0, 5));
+        int[][] sudoku = sudokuOverride.createSudoku();
+        for(int y = 0; y < 9; y++){
+            for(int x = 0; x < 9; x++){
+                System.out.print(sudoku[y][x]);
+            }
+            System.out.println();
+        }
+
+        System.out.println("=================");
+
+        int[][] ungeloestesSudoku = sudokuOverride.unsolveSudoku(35);
+        for(int y = 0; y < 9; y++){
+            for(int x = 0; x < 9; x++){
+                System.out.print(ungeloestesSudoku[y][x]);
+            }
+            System.out.println();
+        }
+
     }
 }
 
